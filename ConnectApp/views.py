@@ -1,83 +1,208 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
-from django.contrib.auth import authenticate
+from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
+from django.utils.text import slugify
+from django.shortcuts import get_object_or_404
+from . import serializers, models, filters, utils
+from auth_ import serializers as szr
 
-
-class LoginView(APIView):
-
-    def gen_tokens(self, user):
-        jwt_tokens = RefreshToken.for_user(user)
-
-        return {
-            'refresh_token': str(jwt_tokens),
-            'access_token': str(jwt_tokens.access_token)
-        }
+class UserCreateView (APIView):
 
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        serializer = szr.UserCreationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        utils.lazy_general_subscribe(serializer.instance)
+        serializer.save()
+        return Response(status=status.HTTP_201_CREATED)
 
-        user = authenticate(username=username, password=password)
+class UserDetailView (APIView):
+    permission_classes = [IsAuthenticated]
 
-        if user is not None:
-            tokens = self.gen_tokens(user)
-            response = Response({"message": "login successful",
-                                 "access_token": tokens.get('access_token')},
-                                status=status.HTTP_200_OK)
+    def get(self, request):
+        user = request.user
+        serializer = szr.UserSerializer(user)
+        return Response(serializer.data)
 
-            response.set_cookie(
-                key='refresh_token',
-                value=tokens.get('refresh_token'),
-                httponly=True,
-                secure=True,
-                samesite='Lax',
+    def patch (self, request):
+        user = request.user
+
+        general_channels = models.Channel.objects.filter(kind="general")
+        user_subs = set(user.subscriptions)
+        user_subs |= {t.slug for t in general_channels}
+        user.subscriptions = list(user_subs)
+        user.save(update_fields=["subscriptions"])
+
+        serializer = szr.UserSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+
+    def delete (self, request):
+        user = request.user
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ChannelBulkView (APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        channels = models.Channel.objects.all()
+        serializer = serializers.ChannelSerializer(channels, many=True)
+        return Response(serializer.data)
+
+class ChannelDetailView (APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get (self, request, id):
+        channel = get_object_or_404(models.Channel, pk=id)
+        serializer = serializers.ChannelSerializer(channel)
+        return Response(serializer.data)
+
+    def post (self, request):
+        channel = serializers.ChannelSerializer(data=request.data)
+        channel.is_valid(raise_exception=True)
+        channel_instance = channel.save()
+        publisher = serializers.ChannelPublisherSerializer(
+                data={
+                    "publisher": request.user.id,
+                    "channel": channel_instance.id
+                }
             )
-            return response
+        publisher.is_valid(raise_exception=True)
+        publisher.save()
+        return Response(channel.data)
 
-        return Response({"error": "invalid login"},
-                        status=status.HTTP_400_BAD_REQUEST)
+    def patch (self, request, id):
+        channel = get_object_or_404(models.Channel, pk=id)
+        serializer = serializers.ChannelSerializer(channel, request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        patched_channel = serializer.save()
+        patched_channel.slug = slugify(patched_channel.name)
+        return Response(serializer.data)
+
+    def delete (self, request, id):
+        channel = get_object_or_404(models.Channel, pk=id)
+        channel.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ChannelPublisherView (APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get (self, request):
+        channel_id = request.data.get("channel_id", 0)
+        publishers = models.ChannelPublisher.objects.filter(channel=channel_id)
+        serializer = serializers.ChannelPublisherSerializer(publishers, many=True)
+        return Response(serializer.data)
+
+    def post (self, request):
+        channel_id = request.data.get("channel_id", 0)
+        channel = get_object_or_404(models.Channel, pk=channel_id)
+        publisher = serializers.ChannelPublisherSerializer(
+                    data={
+                        "publisher": request.user.id,
+                        "channel": channel.id
+                    }
+                )
+        publisher.is_valid(raise_exception=True)
+        publisher.save()
+        return Response(status=status.HTTP_201_CREATED)
+
+    def delete (self, request):
+        channel_id = request.data.get("channel_id", 0)
+        publisher = models.ChannelPublisher.objects.filter(publisher=request.user.id, channel=channel_id)
+        publisher.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class EventBulkView (APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get (self, request):
+        last_login_date = request.user.last_login
+        subs = request.user.subscriptions
+        events = models.Event.objects.filter(date_registered__gte=last_login_date)
+        if len(subs) > 0:
+            events = events.filter(channel__slug__in=subs)
+        filterset = filters.EventFilter(request.GET, queryset=events)
+        if not filterset.is_valid():
+            return Response(filterset.errors, status=status.HTTP_400_BAD_REQUEST)
+        events = filterset.qs
+        serializer = serializers.EventSerializer(events, many=True)
+        return Response(serializer.data)
 
 
-class RefreshTokenView(APIView):
-    def post(self, request):
-        refresh_token = request.COOKIES.get('refresh_token')
+class EventDetailView (APIView):
+    permission_classes = [IsAuthenticated]
 
-        try:
-            refresh_token = RefreshToken(refresh_token)
-            response = Response(
-                {"message": "successful refresh",
-                 "access_token": str(refresh_token.access_token)},
-                status=status.HTTP_200_OK)
+    def get (self, request, id):
+        event = get_object_or_404(models.Event, pk=id)
+        serializer = serializers.EventSerializer(event)
+        return Response(serializer.data)
 
-            response.set_cookie(
-                key='refresh_token',
-                value=str(refresh_token),
-                httponly=True,
-                secure=True,
-                samesite='Lax',
-            )
-            return response
+    def post (self, request):
+        event = serializers.EventSerializer(data=request.data)
+        event.is_valid(raise_exception=True)
+        event.save(registrar=request.user)
+        return Response(event.data, status=status.HTTP_201_CREATED)
 
-        except TokenError as e:
-            return Response({"error": str(e)},
-                            status=status.HTTP_401_UNAUTHORIZED)
+    def patch (self, request, id):
+        event = get_object_or_404(models.Event, pk=id)
+        if event.registrar != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = serializers.EventSerializer(event, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete (self, request, id):
+        event = get_object_or_404(models.Event, pk=id)
+        if event.registrar != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        event.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class AdBulkView (APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get (self, request):
+        ads = models.Advert.objects.all()
+        filterset = filters.AdFilter(request.GET, queryset=ads)
+        if not filterset.is_valid():
+            return Response(filterset.errors, status=status.HTTP_400_BAD_REQUEST)
+        ads = filterset.qs
+        serializer = serializers.AdvertSerializer(ads, many=True)
+        return Response(serializer.data)
 
 
-class LogoutView(APIView):
+class AdDetailView (APIView):
+    permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        response = Response({"message": "user logged out"},
-                            status=status.HTTP_200_OK)
+    def get (self, request, id):
+        ad = get_object_or_404(models.Advert, pk=id)
+        serializer = serializers.AdvertSerializer(ad)
+        return Response(serializer.data)
 
-        response.set_cookie(
-            key='refresh_token',
-            value='',
-            httponly=True,
-            secure=True,
-            samesite='Lax',
-            max_age=0
-        )
-        return response
+    def post (self, request):
+        ad = serializers.AdvertSerializer(data=request.data)
+        ad.is_valid(raise_exception=True)
+        ad.save(advertizer=request.user)
+        return Response(ad.data, status=status.HTTP_201_CREATED)
+
+    def patch (self, request, id):
+        ad = get_object_or_404(models.Advert, pk=id)
+        if ad.advertizer != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = serializers.AdvertSerializer(ad, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete (self, request, id):
+        ad = get_object_or_404(models.Advert, pk=id)
+        if ad.advertiser != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        ad.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
