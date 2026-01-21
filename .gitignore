@@ -1,9 +1,8 @@
 .venv/
 .env
-ads/
-events/
 ConnectApp/migrations/
 ConnectApp/__pycache__/
 auth_/migrations/
 auth_/__pycache__/
 MtaaConnect/__pycache__/
+media/

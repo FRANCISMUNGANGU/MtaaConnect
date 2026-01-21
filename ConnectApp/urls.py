@@ -5,9 +5,11 @@ from . import views
 
 urlpatterns = [
     path("users/new/", views.UserCreateView.as_view(), name="new_user"),
-    path("users/me/", views.UserDetailView.as_view(), name="user_profile"),
-    path("users/me/edit/", views.UserDetailView.as_view(), name="edit_User"),
-    path("users/me/delete/", views.UserDetailView.as_view(), name="delete_user"),
+    path("users/me/", views.UserDetailView.as_view(), name="my_profile"),
+    path("users/<int:id>/", views.UserProfileAccessView.as_view(), name="user_profile"),
+
+    path("users/me/edit/", views.UserDetailView.as_view(), name="edit_my_User"),
+    path("users/me/delete/", views.UserDetailView.as_view(), name="delete_my_user"),
 
     path("channels/new/", views.ChannelDetailView.as_view(), name="new_channel"),
     path("channels/<int:id>/", views.ChannelDetailView.as_view(), name="get_channel"),
@@ -34,6 +36,6 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(
-        settings.STATIC_URL,
-        document_root=settings.STATIC_ROOT
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
     )

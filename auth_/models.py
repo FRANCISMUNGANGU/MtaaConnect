@@ -12,6 +12,8 @@ class User(AbstractUser):
                 default=list,
                 blank=True
             )
+    last_event_sync = models.DateTimeField(null=True, blank=True)
+    profile_pic = models.ImageField(upload_to="profiles/", null=True, blank=True)
 
     def __str__ (self):
         return self.username

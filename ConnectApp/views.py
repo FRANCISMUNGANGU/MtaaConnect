@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from django.utils.text import slugify
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from . import serializers, models, filters, utils
 from auth_ import serializers as szr
@@ -17,7 +18,15 @@ class UserCreateView (APIView):
         serializer.save()
         return Response(status=status.HTTP_201_CREATED)
 
-class UserDetailView (APIView):
+class UserProfileAccessView (APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id):
+        user = get_object_or_404(models.User, pk=id)
+        serializer = szr.UserSerializer(user)
+        return Response(serializer.data)
+
+class UserProfileView (APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -121,9 +130,11 @@ class EventBulkView (APIView):
     permission_classes = [IsAuthenticated]
 
     def get (self, request):
-        last_login_date = request.user.last_login
+        last_event_sync = request.user.last_event_sync
         subs = request.user.subscriptions
-        events = models.Event.objects.filter(date_registered__gte=last_login_date)
+        events = models.Event.objects.all()
+        if last_event_sync is not None:
+            events = events.filter(date_registered__gte=last_event_sync)
         if len(subs) > 0:
             events = events.filter(channel__slug__in=subs)
         filterset = filters.EventFilter(request.GET, queryset=events)
@@ -131,6 +142,8 @@ class EventBulkView (APIView):
             return Response(filterset.errors, status=status.HTTP_400_BAD_REQUEST)
         events = filterset.qs
         serializer = serializers.EventSerializer(events, many=True)
+        request.user.last_event_sync = timezone.now()
+        request.user.save(update_fields=["last_event_sync"])
         return Response(serializer.data)
 
 

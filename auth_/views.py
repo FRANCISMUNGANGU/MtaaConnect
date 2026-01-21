@@ -27,7 +27,7 @@ class LoginView(APIView):
             tokens = self.gen_tokens(user)
             utils.lazy_general_subscribe(user)
             user.last_login = timezone.now()
-            user.save(update_fields=["last_login"])
+            user.save(update_fields=["last_login", "subscriptions"])
             response = Response({"message": "login successful",
                                  "access_token": tokens.get('access_token')},
                                 status=status.HTTP_200_OK)
