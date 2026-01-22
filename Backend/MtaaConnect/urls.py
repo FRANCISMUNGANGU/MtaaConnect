@@ -6,3 +6,4 @@ urlpatterns = [
     path('auth/', include('auth_.urls')),
     path('', include('ConnectApp.urls')),
 ]
+
