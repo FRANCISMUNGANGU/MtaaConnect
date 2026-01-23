@@ -35,7 +35,7 @@ class Event(models.Model):
         return self.title
 
 class Advert(models.Model):
-    advertizer = models.ForeignKey(User, on_delete=models.PROTECT)
+    advertizer = models.ForeignKey(User, on_delete=models.CASCADE)
     poster = models.ImageField(upload_to='ads/', null=True, blank=True)
     title = models.CharField(max_length=100, null=False, blank=False)
     details = models.TextField(null=True, blank=True)
@@ -45,3 +45,15 @@ class Advert(models.Model):
     def __str__(self):
         return self.title
 
+class Service (models.Model):
+    ad = models.ForeignKey(Advert, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100, null=False, blank=False)
+    details = models.TextField(null=True, blank=True)
+    poster = models.ImageField(upload_to='ads/services/', null=True, blank=True)
+    price = models.DecimalField(max_digits=9, decimal_places=2, null=False)
+    date_registered = models.DateTimeField(auto_now_add=True)
+    rating_count = models.IntegerField(default=0)
+    rating_sum = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.title

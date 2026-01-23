@@ -219,3 +219,45 @@ class AdDetailView (APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
         ad.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ServiceBulkView (APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get (self, request):
+        services = models.Service.objects.all()
+        filterset = filters.ServiceFilter(request.GET, queryset=services)
+        if not filterset.is_valid():
+            return Response(filterset.errors, status=status.HTTP_400_BAD_REQUEST)
+        services = filterset.qs
+        serializer = serializers.ServiceGetSerializer(services, many=True)
+        return Response(serializer.data)
+
+class ServiceDetailView (APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get (self, request, id):
+        service = get_object_or_404(models.Service, pk=id)
+        serializer = serializers.ServiceGetSerializer(service)
+        return Response(serializer.data)
+
+    def post (self, request):
+        service = serializers.ServiceCreateSerializer(data=request.data)
+        service.is_valid(raise_exception=True)
+        service.save()
+        return Response(service.data, status=status.HTTP_201_CREATED)
+
+    def patch (self, request, id):
+        service = get_object_or_404(models.Service, pk=id)
+        if service.ad.advertizer != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = serializers.ServicePatchSerializer(service, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete (self, request, id):
+        service = get_object_or_404(models.Advert, pk=id)
+        if service.ad.advertiser != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        service.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

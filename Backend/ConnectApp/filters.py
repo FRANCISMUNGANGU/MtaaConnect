@@ -17,6 +17,16 @@ class AdFilter (filters.FilterSet):
         fields = {
                 "title": ["contains"],
                 "details": ["contains"],
-                "category": ["exact"],
+                "category": ["exact", "contains"],
+                "date_registered": ["gte", "lte"]
+            }
+
+class ServiceFilter (filters.FilterSet):
+    class Meta:
+        model = models.Service
+        fields = {
+                "title": ["contains"],
+                "details": ["contains"],
+                "price": ["gte", "lte"],
                 "date_registered": ["gte", "lte"]
             }
