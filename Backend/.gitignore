@@ -6,3 +6,8 @@ auth_/migrations/
 auth_/__pycache__/
 MtaaConnect/__pycache__/
 media/
+
+# Python bytecode
+**/__pycache__/
+*.pyc
+

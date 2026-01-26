@@ -1,6 +1,6 @@
 import React from "react";
 
-function signin() {
+export default function Signin() {
   return (
     <div>
       <h1>Sign In to MtaaConnect</h1>
