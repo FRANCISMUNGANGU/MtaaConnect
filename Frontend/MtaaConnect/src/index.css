@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #0d59f2;
+  --color-background-light: #f5f6f8;
+  --color-background-dark: #101622;
+}
+
+/* Custom Glassmorphism Utility */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #282e39; border-radius: 10px; }
