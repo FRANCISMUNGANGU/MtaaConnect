@@ -25,7 +25,7 @@ const LandingPage = () => {
           </div>
           
           <div className="hidden lg:flex items-center gap-8">
-            {['Events', 'Services', 'Hostels', 'Clubs'].map((item) => (
+            {['Events', 'Services', 'Channels', 'Ads'].map((item) => (
               <a key={item} className="text-white/80 hover:text-primary text-sm font-semibold transition-colors" href="#">{item}</a>
             ))}
           </div>
