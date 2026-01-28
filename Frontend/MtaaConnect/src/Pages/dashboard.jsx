@@ -2,7 +2,7 @@ import React from 'react';
 
 const StudentDashboard = () => {
   return (
-    <div className="dark bg-[#101622] text-white font-display min-h-screen flex overflow-hidden">
+    <div className="dark bg-[#101622] text-white font-display min-h-screen">
       {/* Custom Styles for Scrollbars */}
       <style dangerouslySetInnerHTML={{ __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -12,34 +12,11 @@ const StudentDashboard = () => {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
 
-      {/* Sidebar Navigation */}
-      <aside className="hidden lg:flex w-72 flex-shrink-0 border-r border-slate-800 bg-[#111318] flex-col justify-between p-6">
-        <div className="flex flex-col gap-8">
-          <div className="flex items-center gap-3 px-2">
-            <div className="flex items-center gap-2">
-            <div className="size-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-white text-xl">hub</span>
-            </div>
-            <h2 className="text-white text-lg font-extrabold tracking-tight hidden sm:block">MtaaConnect</h2>
-          </div>
-          </div>
-
-          <nav className="flex flex-col gap-2">
-            <SidebarLink icon="dashboard" label="Dashboard" active />
-            <SidebarLink icon="storefront" label="Marketplace" />
-            <SidebarLink icon="groups" label="Clubs & Societies" />
-            <SidebarLink icon="campaign" label="Notice Board" />
-            <SidebarLink icon="account_circle" label="Profile" />
-          </nav>
-        </div>
-
-       
-      </aside>
-
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar">
-        <header className="sticky top-0 z-10 flex items-center justify-between px-8 py-4 bg-[#101622]/80 backdrop-blur-md border-b border-slate-800">
-          <h2 className="text-2xl font-extrabold tracking-tight">Jambo, Student! 👋</h2>
+      <main className="w-full overflow-y-auto custom-scrollbar">
+        <header className="sticky top-0 z-10 bg-[#101622]/80 backdrop-blur-md border-b border-slate-800">
+          <div className="max-w-[1100px] mx-auto flex items-center justify-between px-6 py-4">
+            <h2 className="text-2xl font-extrabold tracking-tight">Jambo, Student!</h2>
           <div className="flex items-center gap-4">
             <HeaderAction icon="notifications" />
             <HeaderAction icon="settings" />
@@ -47,9 +24,10 @@ const StudentDashboard = () => {
                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVEDYjPq_Q221ykljz8aXFIMMFtutasoVOeqd2os9S64RmkxPPJxWwA_j4VuoBcZoZk6Pthjqzay8dg4A8NPtRT5K9Qmfji6e_LPm9DqRmvocEHpiA8WxbeaZ5thZZuD0-XQLmy7LDhyHKp0v_1kr54KZcCbsRUbuBYmQQG3cDUMFqae6017VAL1ay8yLCtPz4J91JAUjtbTZuW9NrKvJMUMtTG5q8WG_-k5K2o_eVhjmbBv-5Ti8CWJlEh66MwZ81mwMjZboUnmA" alt="profile" />
             </div>
           </div>
+          </div>
         </header>
 
-        <div className="p-8 space-y-12">
+        <div className="max-w-[1100px] mx-auto p-6 md:p-8 space-y-12">
           {/* Trending Events - Horizontal Layout */}
           <section>
             <div className="flex items-center justify-between mb-6">

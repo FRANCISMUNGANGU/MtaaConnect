@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // --- Sub-components ---
 
@@ -22,7 +23,7 @@ const CategoryBtn = ({ icon, label, active = false }) => (
   </button>
 );
 
-const AdCard = ({ price, category, time, title, location, image }) => (
+const AdCard = ({ price, category, time, title, location, image, onView }) => (
   <div className="group flex flex-col backdrop-blur-2xl bg-[rgba(15,18,25,0.7)] border border-white/10 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-[#0066FF]/20 transition-all duration-500">
     <div className="relative w-full aspect-[4/3] overflow-hidden">
       <div 
@@ -51,7 +52,10 @@ const AdCard = ({ price, category, time, title, location, image }) => (
         <span className="material-symbols-outlined text-[16px] text-[#0066FF]">location_on</span> {location}
       </p>
       <div className="mt-auto">
-        <button className="w-full py-3.5 bg-white/5 text-white rounded-2xl text-sm font-bold border border-white/10 hover:bg-[#0066FF] hover:text-white hover:border-[#0066FF] transition-all active:scale-95">
+        <button
+          onClick={onView}
+          className="w-full py-3.5 bg-white/5 text-white rounded-2xl text-sm font-bold border border-white/10 hover:bg-[#0066FF] hover:text-white hover:border-[#0066FF] transition-all active:scale-95"
+        >
           View Details
         </button>
       </div>
@@ -63,6 +67,7 @@ const AdCard = ({ price, category, time, title, location, image }) => (
 
 const Ads = () => {
   const [activeGate, setActiveGate] = useState('Juja Gate A');
+  const navigate = useNavigate();
 
   const gates = ["Juja Gate A", "Juja Gate C", "Oasis", "Juja South", "Highpoint"];
   
@@ -120,7 +125,11 @@ const Ads = () => {
         {/* Ad Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {ads.map((ad, idx) => (
-            <AdCard key={idx} {...ad} />
+            <AdCard
+              key={idx}
+              {...ad}
+              onView={() => navigate(`/ads/${idx + 1}`)}
+            />
           ))}
         </div>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // --- Shared Components ---
 
@@ -16,7 +17,7 @@ const SidebarLink = ({ icon, label, active = false }) => (
   </a>
 );
 
-const ServiceCard = ({ image, rating, category, title, desc, icon }) => (
+const ServiceCard = ({ image, rating, category, title, desc, icon, onClick }) => (
   <div className="bg-[#0F1219]/70 backdrop-blur-xl border border-white/10 rounded-[20px] overflow-hidden group hover:shadow-2xl hover:shadow-[#0066FF]/20 transition-all duration-500">
     <div className="h-44 bg-gray-800 relative overflow-hidden">
       <img
@@ -38,7 +39,10 @@ const ServiceCard = ({ image, rating, category, title, desc, icon }) => (
       </div>
       <h3 className="text-lg font-extrabold mb-1 text-white group-hover:text-[#0066FF] transition-colors">{title}</h3>
       <p className="text-sm text-[#94A3B8] mb-6 line-clamp-2 font-medium">{desc}</p>
-      <button className="w-full h-12 bg-[#0066FF] text-white text-sm font-bold rounded-[20px] hover:bg-[#0055DD] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0066FF]/20 active:scale-95">
+      <button
+        onClick={onClick}
+        className="w-full h-12 bg-[#0066FF] text-white text-sm font-bold rounded-[20px] hover:bg-[#0055DD] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#0066FF]/20 active:scale-95"
+      >
         <span className="material-symbols-outlined text-xl">{icon}</span>
         Request Service
       </button>
@@ -50,6 +54,7 @@ const ServiceCard = ({ image, rating, category, title, desc, icon }) => (
 
 const Services = () => {
   const [activeCategory, setActiveCategory] = useState('All Services');
+  const navigate = useNavigate();
 
   const services = [
     { rating: "4.8", category: "Boda Boda", title: "John's Fast Boda", desc: "Reliable transportation within Juja and surrounding estates. Fast and safe.", icon: "electric_moped", image: "https://picsum.photos/400/300?random=11" },
@@ -135,7 +140,11 @@ const Services = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 px-8 pb-12">
             {services.map((service, idx) => (
-              <ServiceCard key={idx} {...service} />
+              <ServiceCard
+                key={idx}
+                {...service}
+                onClick={() => navigate(`/services/${idx + 1}`)}
+              />
             ))}
           </div>
         </section>

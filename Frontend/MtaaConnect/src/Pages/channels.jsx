@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // --- Sub-components ---
 
@@ -11,8 +12,11 @@ const NavLink = ({ label, active = false }) => (
   </a>
 );
 
-const ChannelCard = ({ icon, title, desc, members, tag, tagColor }) => (
-  <div className="bg-[rgba(23,27,34,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.08)] shadow-2xl rounded-[20px] p-6 flex flex-col gap-5 group hover:border-[#0066FF]/40 hover:shadow-[0_0_30px_rgba(0,102,255,0.15)] hover:-translate-y-1 transition-all duration-300">
+const ChannelCard = ({ icon, title, desc, members, tag, tagColor, onClick }) => (
+  <div
+    onClick={onClick}
+    className="cursor-pointer bg-[rgba(23,27,34,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.08)] shadow-2xl rounded-[20px] p-6 flex flex-col gap-5 group hover:border-[#0066FF]/40 hover:shadow-[0_0_30px_rgba(0,102,255,0.15)] hover:-translate-y-1 transition-all duration-300"
+  >
     <div className="flex items-start justify-between">
       <div className="h-14 w-14 rounded-[20px] bg-gradient-to-br from-[#0066FF] to-[#0044CC] flex items-center justify-center text-white shadow-lg shadow-[#0066FF]/20">
         <span className="material-symbols-outlined text-[32px]">{icon}</span>
@@ -43,6 +47,7 @@ const ChannelCard = ({ icon, title, desc, members, tag, tagColor }) => (
 
 const Channels = () => {
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
   
   const channels = [
     { icon: 'terminal', title: 'Juja Techies', desc: 'Where JKUAT developers build the future. Coding sessions, hackathons, and coffee chats.', members: '1,248', tag: 'Active Now' },
@@ -97,7 +102,11 @@ const Channels = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {channels.map((ch, idx) => (
-            <ChannelCard key={idx} {...ch} />
+            <ChannelCard
+              key={idx}
+              {...ch}
+              onClick={() => navigate(`/channels/${idx + 1}`)}
+            />
           ))}
         </div>
 
